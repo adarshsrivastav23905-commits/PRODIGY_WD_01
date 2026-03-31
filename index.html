@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Manager Pro</title>
+
+<style>
+
+/* ================= GLOBAL ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #1f4037, #99f2c8);
+  color: #fff;
+}
+
+/* ================= NAVBAR ================= */
+nav {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  transition: 0.4s;
+}
+
+nav.scrolled {
+  background: rgba(0,0,0,0.9);
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.nav-links a:hover {
+  background: white;
+  color: #1f4037;
+  transform: scale(1.1);
+}
+
+.menu-toggle {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/* ================= SECTIONS ================= */
+section {
+  padding: 120px 20px;
+  min-height: 100vh;
+}
+
+/* ================= FORM ================= */
+.form-container {
+  max-width: 700px;
+  margin: auto;
+  background: rgba(255,255,255,0.15);
+  padding: 25px;
+  border-radius: 15px;
+}
+
+.form-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  margin-top: 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f4037;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #1f4037;
+  color: white;
+}
+
+/* ================= SEARCH ================= */
+.search-box {
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+/* ================= CARDS ================= */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.card {
+  width: 280px;
+  padding: 20px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  color: black;
+  transition: 0.4s;
+  position: relative;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+}
+
+/* BUTTONS */
+.card-buttons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.small-btn {
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.edit-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.delete-btn {
+  background: red;
+  color: white;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    right: 0;
+    top: 70px;
+    flex-direction: column;
+    background: black;
+    width: 200px;
+    display: none;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div class="logo">StudentPro</div>
+  <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+  <div class="nav-links" id="navLinks">
+    <a href="#form">Add Student</a>
+    <a href="#display">View Students</a>
+  </div>
+</nav>
+
+<!-- FORM SECTION -->
+<section id="form">
+  <div class="form-container">
+    <h2>Student Details Form</h2>
+
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="number" id="age" placeholder="Age">
+    <input type="text" id="class" placeholder="Class">
+    <input type="text" id="roll" placeholder="Roll Number">
+    <input type="text" id="email" placeholder="Email">
+    <input type="text" id="phone" placeholder="Phone">
+    <input type="text" id="address" placeholder="Address">
+    <input type="text" id="city" placeholder="City">
+    <input type="text" id="state" placeholder="State">
+    <input type="text" id="country" placeholder="Country">
+    <input type="text" id="course" placeholder="Course">
+
+    <button onclick="saveStudent()">Save Student</button>
+  </div>
+</section>
+
+<!-- DISPLAY SECTION -->
+<section id="display">
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Search..." onkeyup="filterData()">
+  </div>
+
+  <div class="container" id="studentContainer"></div>
+</section>
+
+<script>
+
+// NAVBAR SCROLL
+window.addEventListener("scroll", () => {
+  document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
+});
+
+// MOBILE MENU
+function toggleMenu() {
+  document.getElementById("navLinks").classList.toggle("active");
+}
+
+// STORAGE
+let students = JSON.parse(localStorage.getItem("students")) || [];
+
+// SAVE DATA
+function saveStudent() {
+  const student = {
+    name: name.value,
+    age: age.value,
+    class: document.getElementById("class").value,
+    roll: roll.value,
+    email: email.value,
+    phone: phone.value,
+    address: address.value,
+    city: city.value,
+    state: state.value,
+    country: country.value,
+    course: course.value
+  };
+
+  students.push(student);
+  localStorage.setItem("students", JSON.stringify(students));
+  displayStudents();
+  clearForm();
+}
+
+// CLEAR FORM
+function clearForm() {
+  document.querySelectorAll("input").forEach(i => i.value = "");
+}
+
+// DISPLAY DATA
+function displayStudents() {
+  const container = document.getElementById("studentContainer");
+  container.innerHTML = "";
+
+  students.forEach((s, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${s.name}</h3>
+      <p><b>Age:</b> ${s.age}</p>
+      <p><b>Class:</b> ${s.class}</p>
+      <p><b>Roll:</b> ${s.roll}</p>
+      <p><b>Email:</b> ${s.email}</p>
+      <p><b>Phone:</b> ${s.phone}</p>
+      <p><b>City:</b> ${s.city}</p>
+      <p><b>Course:</b> ${s.course}</p>
+
+      <div class="card-buttons">
+        <button class="small-btn edit-btn" onclick="editStudent(${index})">Edit</button>
+        <button class="small-btn delete-btn" onclick="deleteStudent(${index})">Delete</button>
+      </div>
+    `;
+
+    // HOVER COLOR CHANGE
+    card.addEventListener("mouseover", () => {
+      card.style.background = randomGradient();
+    });
+
+    card.addEventListener("mouseout", () => {
+      card.style.background = "linear-gradient(135deg, #ff9a9e, #fad0c4)";
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// DELETE
+function deleteStudent(index) {
+  students.splice(index, 1);
+  localStorage.setItem("students", JSON.stringify(students));
+  displayStudents();
+}
+
+// EDIT
+function editStudent(index) {
+  const s = students[index];
+
+  name.value = s.name;
+  age.value = s.age;
+  document.getElementById("class").value = s.class;
+  roll.value = s.roll;
+  email.value = s.email;
+  phone.value = s.phone;
+  address.value = s.address;
+  city.value = s.city;
+  state.value = s.state;
+  country.value = s.country;
+  course.value = s.course;
+
+  deleteStudent(index);
+}
+
+// SEARCH
+function filterData() {
+  const value = document.getElementById("search").value.toLowerCase();
+  const cards = document.querySelectorAll(".card");
+
+  cards.forEach(card => {
+    card.style.display = card.innerText.toLowerCase().includes(value) ? "block" : "none";
+  });
+}
+
+// RANDOM GRADIENT
+function randomGradient() {
+  const gradients = [
+    "linear-gradient(135deg,#667eea,#764ba2)",
+    "linear-gradient(135deg,#ff6a00,#ee0979)",
+    "linear-gradient(135deg,#00c6ff,#0072ff)",
+    "linear-gradient(135deg,#f7971e,#ffd200)"
+  ];
+  return gradients[Math.floor(Math.random() * gradients.length)];
+}
+
+// LOAD
+displayStudents();
+
+</script>
+
+</body>
+</html>
